@@ -10,7 +10,7 @@ services:
 
     skydiablo_media.service_media_router.skydiablo_controller_media_router:
         class: SkyDiablo\MediaBundle\Service\MediaRouter\SkyDiabloControllerMediaRouter
-        arguments: ['@router', '@skydiablo_media.current_skydiablo_token']
+        arguments: ['@router']
 
     skydiablo_media.service_media_router.s3media_router:
         class: SkyDiablo\MediaBundle\Service\MediaRouter\S3MediaRouter
