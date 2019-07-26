@@ -1,0 +1,118 @@
+parameters:
+    skydiablo_media.media_router.s3.region: 'eu-west-1'
+    skydiablo_media.media_router.img_ixcom.domain: 'CHANGE_ME'
+    skydiablo_media.media_router.img_ixcom.secure_url_token: 'CHANGE_ME'
+    skydiablo_media.media_router.sm_image_resizer.endpoint: 'CHANGE_ME'
+
+services:
+    #============ MEDIA ROUTER ===============
+    skydiablo_media.service_media_router: '@skydiablo_media.service_media_router.skydiablo_controller_media_router'
+
+    skydiablo_media.service_media_router.skydiablo_controller_media_router:
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\SkyDiabloControllerMediaRouter
+        arguments: ['@router', '@skydiablo_media.current_skydiablo_token']
+
+    skydiablo_media.service_media_router.s3media_router:
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\S3MediaRouter
+        arguments: ['%skydiablo_media.media_router.s3.region%']
+        public: false
+
+    skydiablo_media.service_media_router.rsz_io_media_router.pre_s3:
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\RszIoMediaRouter
+        arguments: ['@skydiablo_media.service_media_router.s3media_router']
+
+    skydiablo_media.service_media_router.wrapped_cf_rsz_io_media_router:
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\WrappedCfRszIoMediaRouter
+        arguments: ['@skydiablo_media.service_media_router.s3media_router']
+
+    skydiablo_media.service_media_router.rsz_io_media_router.fallback:
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\ContainerAwareChainMediaRouter
+        arguments:
+            - ['skydiablo_media.service_media_router.rsz_io_media_router.pre_s3', 'skydiablo_media.service_media_router.skydiablo_controller_media_router']
+        calls:
+            - [setContainer, ['@service_container']]
+
+    skydiablo_media.service_media_router.cloud_front_media_router:
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\CloudFrontMediaRouter
+        arguments: ['%kernel.environment%']
+
+    skydiablo_media.service_media_router.img_ixcom_media_router:
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\ImgIXComMediaRouter
+        arguments:
+            - '%skydiablo_media.media_router.img_ixcom.domain%'
+            - '%skydiablo_media.media_router.img_ixcom.secure_url_token%'
+
+    skydiablo_media.service_media_router.skydiablo_image_resizer.fallback:
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\ContainerAwareChainMediaRouter
+        arguments:
+            - ['skydiablo_media.service_media_router.skydiablo_image_resizer.router', 'skydiablo_media.service_media_router.s3media_router']
+        calls:
+            - [setContainer, ['@service_container']]
+
+    skydiablo_media.service_media_router.skydiablo_image_resizer.router:
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\SkyDiabloImageResizer\Router
+        arguments:
+            - '%skydiablo_media.media_router.sm_image_resizer.endpoint%'
+
+    #============ REPOSITORY ===============
+    skydiablo_media.entity_repository.mime_repository:
+        class: SkyDiablo\MediaBundle\Entity\Repository\MimeRepository
+        parent: 'skydiablo.doctrine.repository.base'
+        arguments: ['SkyDiabloMediaBundle:Mime']
+
+    skydiablo_media.entity_repository.media_repository:
+        class: SkyDiablo\MediaBundle\Entity\Repository\MediaRepository
+        parent: 'skydiablo.doctrine.repository.base'
+        arguments: ['SkyDiabloMediaBundle:Media']
+
+    #============== FACTORY ===============
+    skydiablo_media.entity_factory.media_factory:
+        class: SkyDiablo\MediaBundle\Entity\Factory\MediaFactory
+        parent: 'skydiablo.doctrine.entity.factory.active_entity'
+        arguments:
+            - '@skydiablo_media.entity_repository.mime_repository'
+            - '@skydiablo_media.service.image_service'
+
+    #================ SERVICE ===============
+    skydiablo_media.imagine:
+        class: Imagine\Imagick\Imagine
+
+    skydiablo_media.service.media_storage_service:
+        class: SkyDiablo\MediaBundle\Service\MediaStorageService
+        arguments: ['@oneup_flysystem.skydiablo_filesystem']
+
+    skydiablo_media.service.source_collection_service:
+        class: SkyDiablo\MediaBundle\Service\SourceCollectionService
+        arguments: ['@skydiablo_media.service_media_router']
+
+    skydiablo_media.service.image_service:
+        class: SkyDiablo\MediaBundle\Service\ImageService
+        arguments:
+            - '@skydiablo_media.imagine'
+            - '@oneup_flysystem.memory_filesystem'
+            - { jpeg_quality: 90 }
+
+    #=============== LISTENER ================
+    skydiablo_media.entity_listener.media_listener:
+        class: SkyDiablo\MediaBundle\Entity\Listener\MediaListener
+        arguments: ['@skydiablo_media.service.media_storage_service']
+        tags:
+            - { name: doctrine.orm.entity_listener }
+
+    #=============== SERIALIZER EVENT ================
+    skydiablo_media.serializer_event.media_event:
+        class: SkyDiablo\MediaBundle\Serializer\Event\MediaEvent
+        arguments:
+            - '@skydiablo_media.service.source_collection_service'
+        tags:
+            - { name: jms_serializer.event_subscriber }
+
+    #=============== TWIG ================
+    skydiablo_media.twig.media_twig_extension:
+        class: SkyDiablo\MediaBundle\Twig\MediaTwigExtension
+        arguments: ['@service_container']
+        calls:
+            - ['setContainer', ['@service_container']]
+        public: false
+        tags:
+            - { name: twig.extension }

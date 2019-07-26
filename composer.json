@@ -1,0 +1,30 @@
+{
+    "name": "skydiablo/media-bundle",
+    "type": "symfony-bundle",
+    "description": "Keep your media files as easy as you can ;)",
+    "keywords": ["doctrine", "media"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SkyDiablo",
+            "email": "skydiablo@gmx.net"
+        }
+    ],
+    "require": {
+        "php": "^7.2"
+    },
+    "require-dev": {
+        "skydiablo/media-bundle": "dev-master",
+        "jms/serializer-bundle": "^3.4",
+        "oneup/flysystem-bundle": "^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "SkyDiablo\\MediaBundle": ""
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+        }
+    }
+}
