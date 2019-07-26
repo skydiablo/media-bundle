@@ -20,7 +20,7 @@
     },
     "autoload": {
         "psr-4": {
-            "SkyDiablo\\MediaBundle": ""
+            "SkyDiablo\\MediaBundle\\": ""
         }
     },
     "autoload-dev": {
