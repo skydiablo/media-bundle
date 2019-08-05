@@ -5,7 +5,7 @@ namespace SkyDiablo\MediaBundle\Entity\Listener;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Mapping as ORM;
-use League\Flysystem\File;
+use SkyDiablo\MediaBundle\Model\FlySystem\File;
 use League\Flysystem\FileNotFoundException;
 use SkyDiablo\MediaBundle\Entity\Media;
 use SkyDiablo\MediaBundle\Service\MediaStorageService;
@@ -78,7 +78,7 @@ class MediaListener {
             $eventArgs->setNewValue('filename', $destinationFilename);
             $media->setFilename($destinationFilename);
 
-            $this->updateFiles->attach($media, true);
+            $this->updateFiles->attach($media, $media->getFile()->getLastChange());
         }
     }
 
@@ -103,13 +103,15 @@ class MediaListener {
      */
     protected function copyFileIntoInternalStorage(Media $media, bool $forceUpdateMetadata = false) {
         $destinationFilename = $this->generateUniqueFilename($media);
-        if ($this->mediaStorageService->copyFileIntoStorage($media->getFile(), $destinationFilename)) {
-            /** @var File $file */
-            $file = $this->mediaStorageService->getFileByFilename($destinationFilename);
-            $media->setFile($file, $forceUpdateMetadata);
-            $media->save();
-        } else {
-            throw new \RuntimeException('Can not move media file from "%s" to "%s"', $media->getFile()->getPath(), $destinationFilename);
+        if (!$this->mediaStorageService->isFileEaqualToDestination($media->getFile(), $destinationFilename)) {
+            if ($this->mediaStorageService->copyFileIntoStorage($media->getFile(), $destinationFilename)) {
+                /** @var File $file */
+                $file = $this->mediaStorageService->getFileByFilename($destinationFilename);
+                $media->setFile($file, $forceUpdateMetadata);
+                $media->save();
+            } else {
+                throw new \RuntimeException('Can not move media file from "%s" to "%s"', $media->getFile()->getPath(), $destinationFilename);
+            }
         }
     }
 

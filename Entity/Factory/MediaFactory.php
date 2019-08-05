@@ -5,7 +5,7 @@ namespace SkyDiablo\MediaBundle\Entity\Factory;
 
 use Doctrine\ORM\EntityManager;
 use Imagine\Image\Box;
-use League\Flysystem\File;
+use SkyDiablo\MediaBundle\Model\FlySystem\File;
 use League\Flysystem\Util\MimeType;
 use SkyDiablo\DoctrineBundle\ORM\Entity\Factory\ActiveEntityFactory;
 use SkyDiablo\MediaBundle\Entity\Embeddables\Dimension;

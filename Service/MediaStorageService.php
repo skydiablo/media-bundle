@@ -1,20 +1,19 @@
 <?php
 
-
 namespace SkyDiablo\MediaBundle\Service;
 
-use League\Flysystem\File;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
 use League\Flysystem\MountManager;
+use League\Flysystem\Util;
 use SkyDiablo\MediaBundle\Entity\Media;
+use SkyDiablo\MediaBundle\Model\FlySystem\File;
 
 /**
  * @author SkyDiablo <skydiablo@gmx.net>
  * Class MediaService
  */
-class MediaStorageService
-{
+class MediaStorageService {
 
     const FILESYSTEM_SKYDIABLO = 'skydiablo';
     const FILESYSTEM_SOURCE = 'source';
@@ -33,28 +32,37 @@ class MediaStorageService
      * MediaService constructor.
      * @param FilesystemInterface $filesystem
      */
-    public function __construct(FilesystemInterface $filesystem)
-    {
+    public function __construct(FilesystemInterface $filesystem) {
         $this->filesystem = $filesystem;
         $this->mountManager = new MountManager([self::FILESYSTEM_SKYDIABLO => $filesystem]);
     }
 
     /**
      * @param Media $media
-     * @return \League\Flysystem\Handler|File
+     * @return File
      */
-    public function getFileByMedia(Media $media)
-    {
+    public function getFileByMedia(Media $media) {
         return $this->getFileByFilename($media->getFilename());
     }
 
     /**
      * @param string $filename
-     * @return \League\Flysystem\Handler
+     * @return File
      */
-    public function getFileByFilename(string $filename)
-    {
-        return $this->filesystem->get($filename, new File());
+    public function getFileByFilename(string $filename) {
+        $filename = Util::normalizePath($filename);
+        return new File($this->filesystem, $filename);
+    }
+
+    /**
+     * Ist File und Ziel bereits identisch
+     * @param File $file
+     * @param string $destinationFilename
+     * @return bool
+     */
+    public function isFileEaqualToDestination(File $file, string $destinationFilename) {
+        return ($file->getFilesystem() === $this->filesystem) &&
+                ($file->getPath() == $destinationFilename);
     }
 
     /**
@@ -62,16 +70,15 @@ class MediaStorageService
      * @param $destinationFilename
      * @return bool
      */
-    public function copyFileIntoStorage(File $sourceFile, $destinationFilename)
-    {
+    public function copyFileIntoStorage(File $sourceFile, $destinationFilename) {
         $this->mountManager->mountFilesystem(self::FILESYSTEM_SOURCE, $sourceFile->getFilesystem());
         try {
             $disableAsserts = $this->filesystem->getConfig()->get('disable_asserts', false);
             $this->filesystem->getConfig()->set('disable_asserts', true); // ignore existing files
             return $this->mountManager->copy(
-                $this->prefixMount(self::FILESYSTEM_SOURCE, $sourceFile->getPath()),
-                $this->prefixMount(self::FILESYSTEM_SKYDIABLO, $destinationFilename),
-                ['ContentType' => $sourceFile->getMimetype()]
+                            $this->prefixMount(self::FILESYSTEM_SOURCE, $sourceFile->getPath()),
+                            $this->prefixMount(self::FILESYSTEM_SKYDIABLO, $destinationFilename),
+                            ['ContentType' => $sourceFile->getMimetype()]
             );
         } finally {
             $this->filesystem->getConfig()->set('disable_asserts', $disableAsserts);
@@ -83,12 +90,11 @@ class MediaStorageService
      * @param string $destinationFilename
      * @return bool
      */
-    public function moveFileIntoStorage(File $sourceFile, string $destinationFilename)
-    {
+    public function moveFileIntoStorage(File $sourceFile, string $destinationFilename) {
         $this->mountManager->mountFilesystem(self::FILESYSTEM_SOURCE, $sourceFile->getFilesystem());
         return $this->mountManager->move(
-            $this->prefixMount(self::FILESYSTEM_SOURCE, $sourceFile->getPath()),
-            $this->prefixMount(self::FILESYSTEM_SKYDIABLO, $destinationFilename)
+                        $this->prefixMount(self::FILESYSTEM_SOURCE, $sourceFile->getPath()),
+                        $this->prefixMount(self::FILESYSTEM_SKYDIABLO, $destinationFilename)
         );
     }
 
@@ -97,8 +103,8 @@ class MediaStorageService
      * @param $path
      * @return string
      */
-    protected function prefixMount($mount, $path)
-    {
+    protected function prefixMount($mount, $path) {
         return sprintf('%s://%s', $mount, ltrim($path, '/'));
     }
+
 }

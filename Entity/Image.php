@@ -5,7 +5,7 @@ namespace SkyDiablo\MediaBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use League\Flysystem\File;
+use SkyDiablo\MediaBundle\Model\FlySystem\File;
 use SkyDiablo\MediaBundle\Entity\Embeddables\Dimension;
 
 /**

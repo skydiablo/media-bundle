@@ -5,6 +5,12 @@ parameters:
     skydiablo_media.media_router.sm_image_resizer.endpoint: 'CHANGE_ME'
 
 services:
+    #============ AutoWire Repository ===============
+    SkyDiablo\MediaBundle\Entity\Repository\:
+        resource: '../../Entity/Repository/*'
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+    
     #============ MEDIA ROUTER ===============
     skydiablo_media.service_media_router: '@skydiablo_media.service_media_router.skydiablo_controller_media_router'
 
@@ -54,28 +60,16 @@ services:
         arguments:
             - '%skydiablo_media.media_router.sm_image_resizer.endpoint%'
 
-    #============ REPOSITORY ===============
-    skydiablo_media.entity_repository.mime_repository:
-        class: SkyDiablo\MediaBundle\Entity\Repository\MimeRepository
-        parent: 'skydiablo.doctrine.repository.base'
-        arguments: ['SkyDiabloMediaBundle:Mime']
-
-    skydiablo_media.entity_repository.media_repository:
-        class: SkyDiablo\MediaBundle\Entity\Repository\MediaRepository
-        parent: 'skydiablo.doctrine.repository.base'
-        arguments: ['SkyDiabloMediaBundle:Media']
-
-    #============== FACTORY ===============
     skydiablo_media.entity_factory.media_factory:
         class: SkyDiablo\MediaBundle\Entity\Factory\MediaFactory
         parent: 'skydiablo.doctrine.entity.factory.active_entity'
         arguments:
-            - '@skydiablo_media.entity_repository.mime_repository'
+            - '@SkyDiablo\MediaBundle\Entity\Repository\MimeRepository'
             - '@skydiablo_media.service.image_service'
 
     #================ SERVICE ===============
     skydiablo_media.imagine:
-        class: Imagine\Imagick\Imagine
+        class: Imagine\Gd\Imagine
 
     skydiablo_media.service.media_storage_service:
         class: SkyDiablo\MediaBundle\Service\MediaStorageService

@@ -6,7 +6,7 @@ use Imagine\Image\Box;
 use Imagine\Image\BoxInterface;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\ImagineInterface;
-use League\Flysystem\File;
+use SkyDiablo\MediaBundle\Model\FlySystem\File;
 use League\Flysystem\FilesystemInterface;
 use SkyDiablo\MediaBundle\Entity\Mime;
 
@@ -118,6 +118,7 @@ class ImageService {
         ); // persist in local memory
         /** @var File $file */
         $file = $this->memoryFilesystem->get($tmpFilename);
+        $file = new File($this->memoryFilesystem, $file->getPath()); // TODO: proxy this to own file implementation...
         return $file;
     }
 

@@ -4,7 +4,7 @@ namespace SkyDiablo\MediaBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use League\Flysystem\File;
+use SkyDiablo\MediaBundle\Model\FlySystem\File;
 use SkyDiablo\DoctrineBundle\ORM\Entity\ActiveEntity;
 use SkyDiablo\DoctrineBundle\ORM\Entity\Traits\CreatedAtInterface;
 use SkyDiablo\DoctrineBundle\ORM\Entity\Traits\CreatedAtTrait;

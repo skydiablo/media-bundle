@@ -14,7 +14,8 @@
         "php": "^7.2",
         "skydiablo/doctrine-bundle": "dev-master",
         "jms/serializer-bundle": "^3.4",
-        "oneup/flysystem-bundle": "^3.1"
+        "oneup/flysystem-bundle": "^3.1",
+        "imagine/imagine": "^1.2"
     },
     "require-dev": {
     },
