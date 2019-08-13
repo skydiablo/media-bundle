@@ -10,6 +10,18 @@ services:
         resource: '../../Entity/Repository/*'
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    #============ AutoWire Entity Factory ===============
+    SkyDiablo\MediaBundle\Entity\Factory\:
+        resource: '../../Entity/Factory/*'
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    #============ AutoWire Form ===============
+    SkyDiablo\MediaBundle\Form\:
+        resource: '../../Form/*'
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
     
     #============ MEDIA ROUTER ===============
     skydiablo_media.service_media_router: '@skydiablo_media.service_media_router.skydiablo_controller_media_router'
@@ -60,13 +72,6 @@ services:
         arguments:
             - '%skydiablo_media.media_router.sm_image_resizer.endpoint%'
 
-    skydiablo_media.entity_factory.media_factory:
-        class: SkyDiablo\MediaBundle\Entity\Factory\MediaFactory
-        parent: 'skydiablo.doctrine.entity.factory.active_entity'
-        arguments:
-            - '@SkyDiablo\MediaBundle\Entity\Repository\MimeRepository'
-            - '@skydiablo_media.service.image_service'
-
     #================ SERVICE ===============
     skydiablo_media.imagine:
         class: Imagine\Gd\Imagine
@@ -79,11 +84,18 @@ services:
         class: SkyDiablo\MediaBundle\Service\SourceCollectionService
         arguments: ['@skydiablo_media.service_media_router']
 
-    skydiablo_media.service.image_service:
-        class: SkyDiablo\MediaBundle\Service\ImageService
+    skydiablo_media.service.filesystem.memory_adapter:
+        class: League\Flysystem\Memory\MemoryAdapter
+        
+    skydiablo_media.service.filesystem.memory:
+        class: League\Flysystem\Filesystem
+        arguments: 
+            - '@skydiablo_media.service.filesystem.memory_adapter'
+
+    SkyDiablo\MediaBundle\Service\ImageService:
         arguments:
             - '@skydiablo_media.imagine'
-            - '@oneup_flysystem.memory_filesystem'
+            - '@skydiablo_media.service.filesystem.memory'
             - { jpeg_quality: 90 }
 
     #=============== LISTENER ================

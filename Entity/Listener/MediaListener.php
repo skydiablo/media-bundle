@@ -29,6 +29,11 @@ class MediaListener {
     private $updateFiles;
 
     /**
+     * @var \SplObjectStorage
+     */
+    private $deleteFiles;
+
+    /**
      * @var string
      */
     private $basePath;
@@ -41,6 +46,7 @@ class MediaListener {
     public function __construct(MediaStorageService $mediaStorageService, string $basePath = self::MEDIA_DEFAULT_BASE_PATH) {
         $this->mediaStorageService = $mediaStorageService;
         $this->updateFiles = new \SplObjectStorage();
+        $this->deleteFiles = new \SplObjectStorage();
         $this->basePath = $basePath;
     }
 
@@ -131,13 +137,28 @@ class MediaListener {
      * on entity delete, also delete related file
      * @param Media $media
      * @param LifecycleEventArgs $eventArgs
+     * @ORM\PreRemove()
+     */
+    public function onPreRemove(Media $media, LifecycleEventArgs $eventArgs) {
+        $this->deleteFiles->attach($media, $media->getFile());
+    }
+
+    /**
+     * on entity delete, also delete related file
+     * @param Media $media
+     * @param LifecycleEventArgs $eventArgs
      * @ORM\PostRemove()
      */
     public function onPostRemove(Media $media, LifecycleEventArgs $eventArgs) {
-        try {
-            $media->getFile()->delete();
-        } catch (FileNotFoundException $e) {
-            // iggen - file already removed?
+        if ($this->deleteFiles->contains($media)) {
+            $file = $this->deleteFiles->offsetGet($media);
+            try {
+                $file->delete();
+            } catch (FileNotFoundException $e) {
+                // iggen - file already removed?
+            } finally {
+                $this->deleteFiles->detach($media);
+            }
         }
         //todo: remove empty dirs ?
     }

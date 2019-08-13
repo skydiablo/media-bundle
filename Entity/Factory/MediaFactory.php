@@ -3,9 +3,9 @@
 
 namespace SkyDiablo\MediaBundle\Entity\Factory;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Imagine\Image\Box;
-use SkyDiablo\MediaBundle\Model\FlySystem\File;
+use InvalidArgumentException;
 use League\Flysystem\Util\MimeType;
 use SkyDiablo\DoctrineBundle\ORM\Entity\Factory\ActiveEntityFactory;
 use SkyDiablo\MediaBundle\Entity\Embeddables\Dimension;
@@ -13,6 +13,7 @@ use SkyDiablo\MediaBundle\Entity\Image;
 use SkyDiablo\MediaBundle\Entity\Media;
 use SkyDiablo\MediaBundle\Entity\Mime;
 use SkyDiablo\MediaBundle\Entity\Repository\MimeRepository;
+use SkyDiablo\MediaBundle\Model\FlySystem\File;
 use SkyDiablo\MediaBundle\Service\ImageService;
 
 /**
@@ -35,11 +36,11 @@ class MediaFactory extends ActiveEntityFactory
 
     /**
      * MediaFactory constructor.
-     * @param EntityManager $entityManager
+     * @param EntityManagerInterface $entityManager
      * @param MimeRepository $mimeRepository
      * @param ImageService $imageService
      */
-    public function __construct(EntityManager $entityManager, MimeRepository $mimeRepository, ImageService $imageService)
+    public function __construct(EntityManagerInterface $entityManager, MimeRepository $mimeRepository, ImageService $imageService)
     {
         parent::__construct($entityManager);
         $this->mimeRepository = $mimeRepository;
@@ -60,7 +61,7 @@ class MediaFactory extends ActiveEntityFactory
                 $media = $this->createImageByFile($file);
                 break;
             default:
-                throw new \InvalidArgumentException(sprintf('Given mime-type "%s" is not suitable', $mimeType));
+                throw new InvalidArgumentException(sprintf('Given mime-type "%s" is not suitable', $mimeType));
         }
         return $media;
     }
