@@ -29,6 +29,7 @@ class MediaUploadTransformer implements DataTransformerInterface {
      * @var FilesystemInterface
      */
     private $uploadFilesystem;
+    private $mediaFormFieldName;
 
     public function __construct(MediaFactory $mediaFactory) {
         $this->mediaFactory = $mediaFactory;
@@ -45,10 +46,20 @@ class MediaUploadTransformer implements DataTransformerInterface {
             $file = new File($this->uploadFilesystem, $value->getFilename());
             return $this->mediaFactory->createMediaByFile($file);
         }
+        return $value;
     }
 
     public function transform($value) {
         return $value;
+    }
+
+    public function getMediaFormFieldName() {
+        return $this->mediaFormFieldName;
+    }
+
+    public function setMediaFormFieldName($mediaFormFieldName) {
+        $this->mediaFormFieldName = $mediaFormFieldName;
+        return $this;
     }
 
 }

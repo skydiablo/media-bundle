@@ -1,0 +1,3 @@
+skydiablo_media_bundle_controller:
+    type: annotation
+    resource: '../../Controller/'

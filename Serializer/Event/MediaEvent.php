@@ -2,12 +2,17 @@
 
 namespace SkyDiablo\MediaBundle\Serializer\Event;
 
+use Doctrine\Common\Annotations\Reader;
 use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
 use JMS\Serializer\JsonSerializationVisitor;
+use ReflectionClass;
+use SkyDiablo\MediaBundle\Annotation\Serializer\ImageCollectionDimension;
 use SkyDiablo\MediaBundle\Entity\Image;
 use SkyDiablo\MediaBundle\Service\SourceCollectionService;
+use Symfony\Component\Mime\MimeTypes;
+use Symfony\Component\Mime\MimeTypesInterface;
 
 /**
  * @author SkyDiablo <skydiablo@gmx.net>
@@ -21,11 +26,21 @@ class MediaEvent implements EventSubscriberInterface {
     private $sourceCollectionService;
 
     /**
-     * MediaEvent constructor.
-     * @param SourceCollectionService $sourceCollectionService
+     *
+     * @var Reader
      */
-    public function __construct(SourceCollectionService $sourceCollectionService) {
+    private $annotationReader;
+
+    /**
+     *
+     * @var MimeTypesInterface
+     */
+    private $mimeTypes;
+
+    public function __construct(SourceCollectionService $sourceCollectionService, Reader $annotationReader) {
         $this->sourceCollectionService = $sourceCollectionService;
+        $this->annotationReader = $annotationReader;
+        $this->mimeTypes = new MimeTypes();
     }
 
     /**
@@ -45,14 +60,64 @@ class MediaEvent implements EventSubscriberInterface {
     public function onPostSerialize(ObjectEvent $event) {
         $image = $event->getObject();
         if ($image instanceof Image) {
-            $collection = $this->sourceCollectionService->generateImageCollection(
-                    $image,
-                    [200, 400, 800] //todo: set as parameter
-            );
+            $originalMaxDimension = max([$image->getDimension()->getHeight(), $image->getDimension()->getWidth()]);
+            $annotations = $this->getImageCollectionDimensions($event);
+            $collection = [];
+            foreach ($annotations as $annotation) {
+                $dimensions = [$originalMaxDimension];
+                if ($annotation instanceof ImageCollectionDimension) {
+                    $uniqueArray = array_unique($annotation->getDimensions());
+                    $transArray = array_combine($uniqueArray, $uniqueArray);
+                    if (isset($transArray['*'])) {
+                        $transArray['*'] = $originalMaxDimension;
+                    }
+                    $dimensions = array_values($transArray);
+                }
+
+                $annotatedMime = $annotation->getMime();
+                if ($annotatedMime === '*') {
+                    $mime = $image->getMime(); // or null as fallback?
+                } else {
+                    if (false !== strpos($annotatedMime, '/')) {
+                        $mime = new \SkyDiablo\MediaBundle\Entity\Mime($annotatedMime, $this->mimeTypes->getExtensions($annotatedMime)[0]);
+                    } else {
+                        $mime = new \SkyDiablo\MediaBundle\Entity\Mime($this->mimeTypes->getMimeTypes($annotatedMime)[0], $annotatedMime);
+                    }
+                }
+                $collection += $this->sourceCollectionService->generateImageCollection(
+                        $image,
+                        $dimensions,
+                        $mime
+                );
+            }
+
+            if (!$collection) {
+                $collection = $this->sourceCollectionService->generateImageCollection(
+                        $image,
+                        [$originalMaxDimension]
+                );
+            }
+
             /** @var JsonSerializationVisitor $visitor */
             $visitor = $event->getVisitor();
             $visitor->setData('source', array_values($collection));
         }
+    }
+
+    /**
+     * @param ObjectEvent $event
+     * @return ImageCollectionDimension[]
+     */
+    protected function getImageCollectionDimensions(ObjectEvent $event): array {
+        $meta = $event->getContext()->getMetadataStack()->top();
+        $rClass = new ReflectionClass($meta->class);
+        $property = $rClass->getProperty($meta->name);
+        $annotations = $this->annotationReader->getPropertyAnnotations($property) ?? [];
+        return array_filter(array_map(function($anno) {
+                    if ($anno instanceof ImageCollectionDimension) {
+                        return $anno;
+                    }
+                }, $annotations));
     }
 
 }

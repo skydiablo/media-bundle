@@ -16,7 +16,8 @@
         "jms/serializer-bundle": "^3.4",
         "oneup/flysystem-bundle": "^3.1",
         "league/flysystem-memory": "^1.0",
-        "imagine/imagine": "^1.2"
+        "imagine/imagine": "^1.2",
+        "symfony/mime": "^4.0"
     },
     "require-dev": {
     },

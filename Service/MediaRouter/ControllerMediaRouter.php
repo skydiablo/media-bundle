@@ -1,8 +1,8 @@
 <?php
 
-
 namespace SkyDiablo\MediaBundle\Service\MediaRouter;
 
+use SkyDiablo\MediaBundle\Controller\ImageController;
 use SkyDiablo\MediaBundle\Entity\Embeddables\Dimension;
 use SkyDiablo\MediaBundle\Entity\Media;
 use SkyDiablo\MediaBundle\Entity\Mime;
@@ -12,10 +12,7 @@ use Symfony\Component\Routing\RouterInterface;
  * @author SkyDiablo <skydiablo@gmx.net>
  * Class SkyDiabloControllerMediaRouter
  */
-class SkyDiabloControllerMediaRouter implements MediaRouterInterface
-{
-
-    const ROUTE_NAME_IMAGE_THUMBNAIL = 'get_image_thumbnail';
+class ControllerMediaRouter implements MediaRouterInterface {
 
     /**
      * @var RouterInterface
@@ -26,8 +23,7 @@ class SkyDiabloControllerMediaRouter implements MediaRouterInterface
      * SkyDiabloControllerMediaRouter constructor.
      * @param RouterInterface $router
      */
-    public function __construct(RouterInterface $router)
-    {
+    public function __construct(RouterInterface $router) {
         $this->router = $router;
     }
 
@@ -37,8 +33,7 @@ class SkyDiabloControllerMediaRouter implements MediaRouterInterface
      * @param Mime $mime
      * @return string Resource URL
      */
-    public function generateRoute(Media $media, Dimension $dimension, Mime $mime)
-    {
+    public function generateRoute(Media $media, Dimension $dimension, Mime $mime) {
         $params = [
             'mediaId' => $media->getId(),
             'maxX' => $dimension->getWidth(),
@@ -46,7 +41,8 @@ class SkyDiabloControllerMediaRouter implements MediaRouterInterface
             'format' => $mime->getExtension(),
         ];
 
-        $url = $this->router->generate(self::ROUTE_NAME_IMAGE_THUMBNAIL, $params, RouterInterface::ABSOLUTE_URL);
+        $url = $this->router->generate(ImageController::ROUTE_NAME_IMAGE_THUMBNAIL, $params, RouterInterface::ABSOLUTE_URL);
         return $url;
     }
+
 }
