@@ -4,11 +4,10 @@ namespace SkyDiablo\MediaBundle\Controller;
 
 use Imagine\Image\Box;
 use Imagine\Image\ImagineInterface;
-use Imagine\Image\Palette\RGB;
-use Imagine\Image\Point;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use SkyDiablo\MediaBundle\Entity\Embeddables\Dimension;
 use SkyDiablo\MediaBundle\Entity\Image;
-use SkyDiablo\MediaBundle\Message\ImageThumbnailAction;
+use SkyDiablo\MediaBundle\Service\MediaRouter\ControllerMediaRouter\ControllerMediaRouter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController as BaseController;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -26,8 +25,18 @@ class ImageController extends BaseController {
      */
     private $imagine;
 
-    public function __construct(ImagineInterface $imagine) {
+    /**
+     * @var ControllerMediaRouter
+     */
+    private $mediaRouter;
+
+    /**
+     * @param ImagineInterface $imagine
+     * @param ControllerMediaRouter $mediaRouter
+     */
+    function __construct(ImagineInterface $imagine, ControllerMediaRouter $mediaRouter) {
         $this->imagine = $imagine;
+        $this->mediaRouter = $mediaRouter;
     }
 
     /**
@@ -37,7 +46,7 @@ class ImageController extends BaseController {
      * @param int $maxY
      * @param string $format
      * @return StreamedResponse
-     * @Route("/image/{mediaId}/thumbnail/{maxX}x{maxY}.{format}",
+     * @Route("/image/{mediaId}/{hash}/thumbnail/{maxX}x{maxY}.{format}",
      *     name=SkyDiablo\MediaBundle\Controller\ImageController::ROUTE_NAME_IMAGE_THUMBNAIL,
      *     methods="get",
      *     requirements={
@@ -49,8 +58,17 @@ class ImageController extends BaseController {
      * )
      * @ParamConverter("media", options={"id" = "mediaId"})
      */
-    public function getImageThumbnailAction(Image $media, $maxX = 200, $maxY = 200, $format = 'jpg') {
+    public function getImageThumbnailAction(Image $media, string $hash, $maxX = 200, $maxY = 200, $format = 'jpg') {
         //TODO: add event for permission handling ?!
+
+        $mimeGuesser = new \SkyDiablo\MediaBundle\Service\MimeGuesser();
+        $validRequest = $this->mediaRouter->validateMediaParams($media, new Dimension($maxX, $maxY), $mimeGuesser->guess($format), $hash);
+        
+        if(!$validRequest) {
+            //TODO: irgendwas besseres als diesen basic stugff hier!
+            throw new \Exception('Invalid Request!');
+        }
+        
         /** @var ImagineInterface $imagine */
         $image = $this->imagine->read($media->getFile()->readStream())->thumbnail(new Box($maxX, $maxY));
         return StreamedResponse::create(function () use ($image, $format) {

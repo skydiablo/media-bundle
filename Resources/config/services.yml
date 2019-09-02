@@ -27,6 +27,7 @@ services:
     SkyDiablo\MediaBundle\Controller\ImageController:
         arguments:
             - "@skydiablo_media.imagine"
+            - "@skydiablo_media.service_media_router.skydiablo_controller_media_router"
         tags:
             - { name: controller.service_arguments }
     
@@ -35,8 +36,10 @@ services:
     skydiablo_media.service_media_router: '@skydiablo_media.service_media_router.skydiablo_controller_media_router'
 
     skydiablo_media.service_media_router.skydiablo_controller_media_router:
-        class: SkyDiablo\MediaBundle\Service\MediaRouter\ControllerMediaRouter
-        arguments: ['@router']
+        class: SkyDiablo\MediaBundle\Service\MediaRouter\ControllerMediaRouter\ControllerMediaRouter
+        arguments: 
+            - '@router'
+            - '%kernel.secret%'
 
     skydiablo_media.service_media_router.s3media_router:
         class: SkyDiablo\MediaBundle\Service\MediaRouter\S3MediaRouter
@@ -86,7 +89,7 @@ services:
 
     skydiablo_media.service.media_storage_service:
         class: SkyDiablo\MediaBundle\Service\MediaStorageService
-        arguments: ['@oneup_flysystem.skydiablo_filesystem']
+        arguments: ['flysystem.service.id']
 
     skydiablo_media.service.source_collection_service:
         class: SkyDiablo\MediaBundle\Service\SourceCollectionService

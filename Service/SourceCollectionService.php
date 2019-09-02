@@ -41,6 +41,8 @@ class SourceCollectionService {
         $result = [];
         $originalBox = new Box($media->getDimension()->getWidth(), $media->getDimension()->getHeight());
         $ratio = $originalBox->getWidth() / $originalBox->getHeight();
+        /** @var Mime $destinationMime */
+        $destinationMime = $mime ?? $media->getMime();
         foreach ($collectionMaxDimensions AS $maxDimension) {
             if ($ratio < 1) {
                 $box = $originalBox->heighten($maxDimension);
@@ -48,8 +50,6 @@ class SourceCollectionService {
                 $box = $originalBox->widen($maxDimension);
             }
             $dimension = new Dimension($box->getWidth(), $box->getHeight());
-            /** @var Mime $destinationMime */
-            $destinationMime = $mime ?? $media->getMime();
 
             $url = $this->mediaRouter->generateRoute($media, $dimension, $destinationMime);
 

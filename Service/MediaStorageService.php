@@ -34,7 +34,7 @@ class MediaStorageService {
      */
     public function __construct(FilesystemInterface $filesystem) {
         $this->filesystem = $filesystem;
-        $this->mountManager = new MountManager([self::FILESYSTEM_SKYDIABLO => $filesystem]);
+        $this->mountManager = new MountManager([self::FILESYSTEM_SKYDIABLO => $this->filesystem]);
     }
 
     /**
@@ -62,7 +62,7 @@ class MediaStorageService {
      */
     public function isFileEaqualToDestination(File $file, string $destinationFilename) {
         return ($file->getFilesystem() === $this->filesystem) &&
-                ($file->getPath() == $destinationFilename);
+                ($file->getPath() === $destinationFilename);
     }
 
     /**

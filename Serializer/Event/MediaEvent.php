@@ -11,8 +11,7 @@ use ReflectionClass;
 use SkyDiablo\MediaBundle\Annotation\Serializer\ImageCollectionDimension;
 use SkyDiablo\MediaBundle\Entity\Image;
 use SkyDiablo\MediaBundle\Service\SourceCollectionService;
-use Symfony\Component\Mime\MimeTypes;
-use Symfony\Component\Mime\MimeTypesInterface;
+use SkyDiablo\MediaBundle\Service\MimeGuesser;
 
 /**
  * @author SkyDiablo <skydiablo@gmx.net>
@@ -31,16 +30,10 @@ class MediaEvent implements EventSubscriberInterface {
      */
     private $annotationReader;
 
-    /**
-     *
-     * @var MimeTypesInterface
-     */
-    private $mimeTypes;
-
     public function __construct(SourceCollectionService $sourceCollectionService, Reader $annotationReader) {
         $this->sourceCollectionService = $sourceCollectionService;
         $this->annotationReader = $annotationReader;
-        $this->mimeTypes = new MimeTypes();
+        $this->mimeGuesser = new MimeGuesser();
     }
 
     /**
@@ -78,11 +71,7 @@ class MediaEvent implements EventSubscriberInterface {
                 if ($annotatedMime === '*') {
                     $mime = $image->getMime(); // or null as fallback?
                 } else {
-                    if (false !== strpos($annotatedMime, '/')) {
-                        $mime = new \SkyDiablo\MediaBundle\Entity\Mime($annotatedMime, $this->mimeTypes->getExtensions($annotatedMime)[0]);
-                    } else {
-                        $mime = new \SkyDiablo\MediaBundle\Entity\Mime($this->mimeTypes->getMimeTypes($annotatedMime)[0], $annotatedMime);
-                    }
+                    $mime = $this->mimeGuesser->guess($annotatedMime);
                 }
                 $collection += $this->sourceCollectionService->generateImageCollection(
                         $image,
