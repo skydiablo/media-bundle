@@ -15,7 +15,7 @@
         "skydiablo/doctrine-bundle": "dev-master",
         "league/flysystem": "^1.0",
         "league/flysystem-memory": "^1.0",
-        "imagine/imagine": "^1.2",
+        "imagine/imagine": "^2.0",
         "symfony/mime": "^4.0"
     },
     "require-dev": {
