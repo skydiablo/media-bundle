@@ -9,6 +9,7 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
 use SkyDiablo\MediaBundle\Entity\Factory\MediaFactory;
 use SkyDiablo\MediaBundle\Entity\Media;
+use SkyDiablo\MediaBundle\Form\Type\MediaType;
 use SkyDiablo\MediaBundle\Model\FlySystem\File;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -42,14 +43,18 @@ class MediaUploadTransformer implements DataTransformerInterface {
     }
 
     public function reverseTransform($value) {
-        if ($value instanceof UploadedFile) {
-            $file = new File($this->uploadFilesystem, $value->getFilename());
+        $media = $value[MediaType::UPLOAD_FIELD_NAME] ?? $value;
+        if ($media instanceof UploadedFile) {
+            $file = new File($this->uploadFilesystem, $media->getFilename());
             return $this->mediaFactory->createMediaByFile($file);
         }
         return $value;
     }
 
     public function transform($value) {
+        if ($value instanceof Media) {
+            return [MediaType::UPLOAD_FIELD_NAME => $value];
+        }
         return $value;
     }
 

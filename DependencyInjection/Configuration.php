@@ -21,7 +21,7 @@ class Configuration implements ConfigurationInterface {
 
         $rootNode
                 ->children()
-                ->scalarNode('filesystem')->cannotBeEmpty()->defaultValue('skydiablo_media.service.filesystem.memory')->end()
+                ->scalarNode('filesystem')->cannotBeEmpty()->defaultValue('skydiablo_media.service.filesystem.default_storage')->end()
         ;
 
         return $treeBuilder;

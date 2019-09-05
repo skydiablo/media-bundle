@@ -22,7 +22,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * @author Volker von Hoesslin <volker.hoesslin@swsn.de>
  */
 class MediaType extends AbstractType {
-    
+
     const UPLOAD_FIELD_NAME = 'media';
 
     public function __construct(MediaUploadTransformer $mediaUploadTransformer) {
@@ -30,23 +30,31 @@ class MediaType extends AbstractType {
     }
 
     public function configureOptions(OptionsResolver $resolver) {
-        //$resolver->setDefault('data_class', null);
+        $resolver->setDefault('data_class', null);
     }
-    
+
     public function buildForm(FormBuilderInterface $builder, array $options) {
         $builder->addModelTransformer($this->mediaUploadTransformer);
-        $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $event) {
-            if ($event->getForm()->has('unlink') && $event->getForm()->get('unlink')->getData()) {
-                $event->setData(null);
-            }
-        });
-        $builder->add(self::UPLOAD_FIELD_NAME, FileType::class);
-        $builder->add('unlink', CheckboxType::class, [
-            'label' => 'widget_label_unlink',
-            'mapped' => false,
-            'data' => false,
-            'required' => false,
+        $builder->add(self::UPLOAD_FIELD_NAME, FileType::class, [
+            'data_class' => null,
         ]);
+
+        // TODO: find a propper way to show/hide unlink checkbox...
+        //$showUnlink = ($options['data'] ?? $builder->getData()) instanceof \SkyDiablo\MediaBundle\Entity\Media;
+        $showUnlink = true;
+        if ($showUnlink) {
+            $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $event) {
+                if ($event->getForm()->has('unlink') && $event->getForm()->get('unlink')->getData()) {
+                    $event->setData(null);
+                }
+            });
+            $builder->add('unlink', CheckboxType::class, [
+                'label' => 'Delete', //TODO: add translations!
+                'mapped' => false,
+                'data' => false,
+                'required' => false,
+            ]);
+        }
     }
 
     public function buildView(FormView $view, FormInterface $form, array $options) {

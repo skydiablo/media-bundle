@@ -58,7 +58,7 @@ class ImageController extends BaseController {
      * )
      * @ParamConverter("media", options={"id" = "mediaId"})
      */
-    public function getImageThumbnailAction(Image $media, string $hash, $maxX = 200, $maxY = 200, $format = 'jpg') {
+    public function getImageThumbnailAction(Image $media, string $hash, $maxX, $maxY, $format) {
         //TODO: add event for permission handling ?!
 
         $mimeGuesser = new \SkyDiablo\MediaBundle\Service\MimeGuesser();

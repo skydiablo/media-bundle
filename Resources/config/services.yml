@@ -102,6 +102,16 @@ services:
         class: League\Flysystem\Filesystem
         arguments: 
             - '@skydiablo_media.service.filesystem.memory_adapter'
+            
+    skydiablo_media.service.filesystem.default_storage_adapter:
+        class: League\Flysystem\Adapter\Local
+        arguments:
+            - '%kernel.project_dir%/var/storage'
+            
+    skydiablo_media.service.filesystem.default_storage:
+        class: League\Flysystem\Filesystem
+        arguments: 
+            - '@skydiablo_media.service.filesystem.default_storage_adapter'
 
     SkyDiablo\MediaBundle\Service\ImageService:
         arguments:

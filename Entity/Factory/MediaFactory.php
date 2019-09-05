@@ -86,7 +86,7 @@ class MediaFactory extends ActiveEntityFactory
     public function createImageByFile(File $file)
     {
         return $this->createObject(function () use ($file) {
-            $mimeType = Mime::TYPE_IMAGE_JPEG;
+            $mimeType = $file->getMimetype();
             $mime = $this->mimeRepository->getByMimeType($mimeType) ?: new Mime($mimeType, $this->mimeTypeToFileExtension($mimeType));
 
             /** @var Box $imageDimension */
