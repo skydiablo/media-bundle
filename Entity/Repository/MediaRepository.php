@@ -5,7 +5,7 @@ namespace SkyDiablo\MediaBundle\Entity\Repository;
 use Doctrine\DBAL\Types\Type;
 use SkyDiablo\DoctrineBundle\ORM\Repository\BaseRepository;
 use SkyDiablo\MediaBundle\Entity\Media;
-use Symfony\Bridge\Doctrine\RegistryInterface;
+use Doctrine\Common\Persistence\ManagerRegistry;
 
 /**
  * @author SkyDiablo <skydiablo@gmx.net>
@@ -14,13 +14,14 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
  */
 class MediaRepository extends BaseRepository {
 
-    public function __construct(RegistryInterface $registry) {
+    public function __construct(ManagerRegistry $registry) {
         parent::__construct($registry, Media::class);
     }
 
     /**
      * @param $filename
      * @return Media|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function byFilenme($filename) {
         $qb = $this->createQueryBuilder();

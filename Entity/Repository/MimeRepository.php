@@ -5,7 +5,7 @@ namespace SkyDiablo\MediaBundle\Entity\Repository;
 use Doctrine\DBAL\Types\Type;
 use SkyDiablo\DoctrineBundle\ORM\Repository\BaseRepository;
 use SkyDiablo\MediaBundle\Entity\Mime;
-use Symfony\Bridge\Doctrine\RegistryInterface;
+use Doctrine\Common\Persistence\ManagerRegistry;
 
 /**
  * @author SkyDiablo <skydiablo@gmx.net>
@@ -13,13 +13,14 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
  */
 class MimeRepository extends BaseRepository {
 
-    public function __construct(RegistryInterface $registry) {
+    public function __construct(ManagerRegistry $registry) {
         parent::__construct($registry, Mime::class);
     }
 
     /**
      * @param $mimeType
      * @return Mime|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function getByMimeType($mimeType) {
         $qb = $this->createQueryBuilder();
