@@ -7,6 +7,7 @@ use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\EventDispatcher\EventSubscriberInterface;
 use JMS\Serializer\EventDispatcher\ObjectEvent;
 use JMS\Serializer\JsonSerializationVisitor;
+use JMS\Serializer\Metadata\StaticPropertyMetadata;
 use ReflectionClass;
 use SkyDiablo\MediaBundle\Annotation\Serializer\ImageCollectionDimension;
 use SkyDiablo\MediaBundle\Entity\Image;
@@ -17,7 +18,10 @@ use SkyDiablo\MediaBundle\Service\MimeGuesser;
  * @author SkyDiablo <skydiablo@gmx.net>
  * Class MediaEvent
  */
-class MediaEvent implements EventSubscriberInterface {
+class MediaEvent implements EventSubscriberInterface
+{
+
+    const SOURCE_KEY = 'source';
 
     /**
      * @var SourceCollectionService
@@ -30,7 +34,13 @@ class MediaEvent implements EventSubscriberInterface {
      */
     private $annotationReader;
 
-    public function __construct(SourceCollectionService $sourceCollectionService, Reader $annotationReader) {
+    /**
+     * @var MimeGuesser
+     */
+    private $mimeGuesser;
+
+    public function __construct(SourceCollectionService $sourceCollectionService, Reader $annotationReader)
+    {
         $this->sourceCollectionService = $sourceCollectionService;
         $this->annotationReader = $annotationReader;
         $this->mimeGuesser = new MimeGuesser();
@@ -41,7 +51,8 @@ class MediaEvent implements EventSubscriberInterface {
      *
      * @return array
      */
-    public static function getSubscribedEvents() {
+    public static function getSubscribedEvents()
+    {
         return [
             ['event' => Events::POST_SERIALIZE, 'method' => 'onPostSerialize', 'class' => Image::class],
         ];
@@ -50,9 +61,16 @@ class MediaEvent implements EventSubscriberInterface {
     /**
      * @param ObjectEvent $event
      */
-    public function onPostSerialize(ObjectEvent $event) {
+    public function onPostSerialize(ObjectEvent $event)
+    {
         $image = $event->getObject();
         if ($image instanceof Image) {
+            /** @var JsonSerializationVisitor $visitor */
+            $visitor = $event->getVisitor();
+            if ($visitor->hasData(self::SOURCE_KEY)) { //already defined
+                return;
+            }
+
             $originalMaxDimension = max([$image->getDimension()->getHeight(), $image->getDimension()->getWidth()]);
             $annotations = $this->getImageCollectionDimensions($event);
             $collection = [];
@@ -73,23 +91,22 @@ class MediaEvent implements EventSubscriberInterface {
                 } else {
                     $mime = $this->mimeGuesser->guess($annotatedMime);
                 }
-                $collection += $this->sourceCollectionService->generateImageCollection(
-                        $image,
-                        $dimensions,
-                        $mime
+                $collection += $this->sourceCollectionService->generateImageCollectionByMaxDimensions(
+                    $image,
+                    $dimensions,
+                    $mime
                 );
             }
 
             if (!$collection) {
-                $collection = $this->sourceCollectionService->generateImageCollection(
-                        $image,
-                        [$originalMaxDimension]
+                $collection = $this->sourceCollectionService->generateImageCollectionByMaxDimensions(
+                    $image,
+                    [$originalMaxDimension]
                 );
             }
 
-            /** @var JsonSerializationVisitor $visitor */
-            $visitor = $event->getVisitor();
-            $visitor->setData('source', array_values($collection));
+            $visitor->setData(self::SOURCE_KEY, array_values($collection)); //deprecated
+//            $visitor->visitProperty(new StaticPropertyMetadata('', 'source', array_values($collection)), array_values($collection)); //TODO: funzt ned :(
         }
     }
 
@@ -97,16 +114,17 @@ class MediaEvent implements EventSubscriberInterface {
      * @param ObjectEvent $event
      * @return ImageCollectionDimension[]
      */
-    protected function getImageCollectionDimensions(ObjectEvent $event): array {
+    protected function getImageCollectionDimensions(ObjectEvent $event): array
+    {
         $meta = $event->getContext()->getMetadataStack()->top();
         $rClass = new ReflectionClass($meta->class);
         $property = $rClass->getProperty($meta->name);
         $annotations = $this->annotationReader->getPropertyAnnotations($property) ?? [];
-        return array_filter(array_map(function($anno) {
-                    if ($anno instanceof ImageCollectionDimension) {
-                        return $anno;
-                    }
-                }, $annotations));
+        return array_filter(array_map(function ($anno) {
+            if ($anno instanceof ImageCollectionDimension) {
+                return $anno;
+            }
+        }, $annotations));
     }
 
 }

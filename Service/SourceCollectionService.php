@@ -13,7 +13,8 @@ use SkyDiablo\MediaBundle\Service\MediaRouter\MediaRouterInterface;
  * @author SkyDiablo <skydiablo@gmx.net>
  * Class SourceCollectionService
  */
-class SourceCollectionService {
+class SourceCollectionService
+{
 
     const DIMENSIONS_PRESET_SMALL = [200, 200];
 
@@ -26,18 +27,20 @@ class SourceCollectionService {
      * SourceCollectionService constructor.
      * @param MediaRouterInterface $mediaRouter
      */
-    public function __construct(MediaRouterInterface $mediaRouter) {
+    public function __construct(MediaRouterInterface $mediaRouter)
+    {
         $this->mediaRouter = $mediaRouter;
     }
 
     /**
-     * 
+     *
      * @param Image $media
-     * @param array $collectionMaxDimensions
+     * @param int[] $collectionMaxDimensions
      * @param Mime $mime
-     * @return MediaSource
+     * @return MediaSource[]
      */
-    public function generateImageCollection(Image $media, array $collectionMaxDimensions, Mime $mime = null) {
+    public function generateImageCollectionByMaxDimensions(Image $media, array $collectionMaxDimensions, Mime $mime = null)
+    {
         $result = [];
         $originalBox = new Box($media->getDimension()->getWidth(), $media->getDimension()->getHeight());
         $ratio = $originalBox->getWidth() / $originalBox->getHeight();
@@ -54,8 +57,45 @@ class SourceCollectionService {
             $url = $this->mediaRouter->generateRoute($media, $dimension, $destinationMime);
 
             $result[$destinationMime->getType() . '#' . $dimension->hash()] = new MediaSource(
-                    $url, $dimension, $destinationMime
+                $url, $dimension, $destinationMime
             );
+        }
+        return $result;
+    }
+
+    /**
+     * @param Image $media
+     * @param Dimension[] $collectionDimensions
+     * @param Mime $mime
+     * @return MediaSource[]
+     */
+    public function generateImageCollectionByDimensions(Image $media, array $collectionDimensions, Mime $mime = null)
+    {
+        $result = [];
+        $originalBox = new Box($media->getDimension()->getWidth(), $media->getDimension()->getHeight());
+        $ratio = $originalBox->getWidth() / $originalBox->getHeight();
+        /** @var Mime $destinationMime */
+        $destinationMime = $mime ?? $media->getMime();
+        foreach ($collectionDimensions AS $dimension) {
+            $box = null;
+            if ($dimension->getHeight() && $dimension->getWidth()) {
+                $box = $originalBox->heighten($dimension->getHeight());
+                if ($box->getWidth() > $dimension->getWidth()) {
+                    $box = $originalBox->widen($dimension->getWidth());
+                }
+            } elseif ($dimension->getHeight()) {
+                $box = $originalBox->heighten($dimension->getHeight());
+            } elseif ($dimension->getWidth()) {
+                $box = $originalBox->widen($dimension->getWidth());
+            }
+
+            if ($box instanceof Box) {
+                $dimension = new Dimension($box->getWidth(), $box->getHeight());
+                $url = $this->mediaRouter->generateRoute($media, $dimension, $destinationMime);
+                $result[$destinationMime->getType() . '#' . $dimension->hash()] = new MediaSource(
+                    $url, $dimension, $destinationMime
+                );
+            }
         }
         return $result;
     }
