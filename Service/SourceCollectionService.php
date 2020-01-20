@@ -52,10 +52,14 @@ class SourceCollectionService
             } else {
                 $box = $originalBox->widen($maxDimension);
             }
+
+            // prevent upscaling
+            if (!$originalBox->contains($box)) {
+                $box = $originalBox;
+            }
+
             $dimension = new Dimension($box->getWidth(), $box->getHeight());
-
             $url = $this->mediaRouter->generateRoute($media, $dimension, $destinationMime);
-
             $result[$destinationMime->getType() . '#' . $dimension->hash()] = new MediaSource(
                 $url, $dimension, $destinationMime
             );
@@ -92,7 +96,7 @@ class SourceCollectionService
             if ($box instanceof Box) {
 
                 // prevent upscaling
-                if(!$originalBox->contains($box)) {
+                if (!$originalBox->contains($box)) {
                     $box = $originalBox;
                 }
 
