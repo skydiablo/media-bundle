@@ -42,10 +42,12 @@ class ImageController extends BaseController {
     /**
      * Generate thumbnails from image media objects
      * @param Image $media
+     * @param string $hash
      * @param int $maxX
      * @param int $maxY
      * @param string $format
      * @return StreamedResponse
+     * @throws \Exception
      * @Route("/image/{mediaId}/{hash}/thumbnail/{maxX}x{maxY}.{format}",
      *     name=SkyDiablo\MediaBundle\Controller\ImageController::ROUTE_NAME_IMAGE_THUMBNAIL,
      *     methods="get",
