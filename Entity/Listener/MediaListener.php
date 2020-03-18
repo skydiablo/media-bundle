@@ -14,9 +14,10 @@ use SkyDiablo\MediaBundle\Service\MediaStorageService;
  * @author SkyDiablo <skydiablo@gmx.net>
  * Class MediaListener
  */
-class MediaListener {
+class MediaListener
+{
 
-    const MEDIA_DEFAULT_BASE_PATH = 'skydiablo/media';
+    const MEDIA_DEFAULT_BASE_PATH = '';
 
     /**
      * @var MediaStorageService
@@ -43,7 +44,8 @@ class MediaListener {
      * @param string $basePath
      * @todo refactor basepath to an path generator (object or closure)
      */
-    public function __construct(MediaStorageService $mediaStorageService, string $basePath = self::MEDIA_DEFAULT_BASE_PATH) {
+    public function __construct(MediaStorageService $mediaStorageService, string $basePath = self::MEDIA_DEFAULT_BASE_PATH)
+    {
         $this->mediaStorageService = $mediaStorageService;
         $this->updateFiles = new \SplObjectStorage();
         $this->deleteFiles = new \SplObjectStorage();
@@ -55,11 +57,12 @@ class MediaListener {
      * @param Media $media
      * @return string
      */
-    protected function generateUniqueFilename(Media $media) {
-        return implode('/', [
-            $this->basePath,
+    protected function generateUniqueFilename(Media $media)
+    {
+        return trim(implode('/', [
+            trim($this->basePath, '/'),
             $media->getId()
-        ]);
+        ]), '/');
     }
 
     /**
@@ -68,7 +71,8 @@ class MediaListener {
      * @param LifecycleEventArgs $eventArgs
      * @ORM\PostPersist()
      */
-    public function onPostPersist(Media $media, LifecycleEventArgs $eventArgs) {
+    public function onPostPersist(Media $media, LifecycleEventArgs $eventArgs)
+    {
         $this->copyFileIntoInternalStorage($media);
     }
 
@@ -77,7 +81,8 @@ class MediaListener {
      * @param PreUpdateEventArgs $eventArgs
      * @ORM\PreUpdate()
      */
-    public function onPreUpdate(Media $media, PreUpdateEventArgs $eventArgs) {
+    public function onPreUpdate(Media $media, PreUpdateEventArgs $eventArgs)
+    {
         if ($eventArgs->hasChangedField('filename')) { // is this a good identifier?
             $destinationFilename = $this->generateUniqueFilename($media);
 
@@ -93,7 +98,8 @@ class MediaListener {
      * @param LifecycleEventArgs $eventArgs
      * @ORM\PostUpdate()
      */
-    public function onPostUpdate(Media $media, LifecycleEventArgs $eventArgs) {
+    public function onPostUpdate(Media $media, LifecycleEventArgs $eventArgs)
+    {
         if ($this->updateFiles->contains($media)) {
             try {
                 $this->copyFileIntoInternalStorage($media, true);
@@ -107,7 +113,8 @@ class MediaListener {
      * @param Media $media
      * @param bool $forceUpdateMetadata
      */
-    protected function copyFileIntoInternalStorage(Media $media, bool $forceUpdateMetadata = false) {
+    protected function copyFileIntoInternalStorage(Media $media, bool $forceUpdateMetadata = false)
+    {
         $destinationFilename = $this->generateUniqueFilename($media);
         if (!$this->mediaStorageService->isFileEaqualToDestination($media->getFile(), $destinationFilename)) {
             if ($this->mediaStorageService->copyFileIntoStorage($media->getFile(), $destinationFilename)) {
@@ -127,7 +134,8 @@ class MediaListener {
      * @param LifecycleEventArgs $eventArgs
      * @ORM\PostLoad()
      */
-    public function onPostLoad(Media $media, LifecycleEventArgs $eventArgs) {
+    public function onPostLoad(Media $media, LifecycleEventArgs $eventArgs)
+    {
         /** @var File $file */
         $file = $this->mediaStorageService->getFileByMedia($media);
         $media->setFile($file);
@@ -139,7 +147,8 @@ class MediaListener {
      * @param LifecycleEventArgs $eventArgs
      * @ORM\PreRemove()
      */
-    public function onPreRemove(Media $media, LifecycleEventArgs $eventArgs) {
+    public function onPreRemove(Media $media, LifecycleEventArgs $eventArgs)
+    {
         $this->deleteFiles->attach($media, $media->getFile());
     }
 
@@ -149,7 +158,8 @@ class MediaListener {
      * @param LifecycleEventArgs $eventArgs
      * @ORM\PostRemove()
      */
-    public function onPostRemove(Media $media, LifecycleEventArgs $eventArgs) {
+    public function onPostRemove(Media $media, LifecycleEventArgs $eventArgs)
+    {
         if ($this->deleteFiles->contains($media)) {
             $file = $this->deleteFiles->offsetGet($media);
             try {
