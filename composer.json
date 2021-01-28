@@ -16,7 +16,7 @@
         "league/flysystem": "^1.0",
         "league/flysystem-memory": "^1.0",
         "imagine/imagine": "^1.2",
-        "symfony/mime": "^4.0"
+        "symfony/mime": "^4.0|^5.0"
     },
     "require-dev": {
         "jms/serializer-bundle": "^3.4"

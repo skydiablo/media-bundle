@@ -16,8 +16,8 @@ class Configuration implements ConfigurationInterface {
      * {@inheritdoc}
      */
     public function getConfigTreeBuilder() {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('sky_diablo_media');
+        $treeBuilder = new TreeBuilder('sky_diablo_media');
+        $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
                 ->children()
