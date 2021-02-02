@@ -19,20 +19,21 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  *
  * @author Volker von Hoesslin <volker.hoesslin@swsn.de>
  */
-class MediaUploadTransformer implements DataTransformerInterface {
+class MediaUploadTransformer implements DataTransformerInterface
+{
 
     /**
      * @var MediaFactory
      */
-    private $mediaFactory;
+    private MediaFactory $mediaFactory;
 
     /**
      * @var FilesystemInterface
      */
     private $uploadFilesystem;
-    private $mediaFormFieldName;
 
-    public function __construct(MediaFactory $mediaFactory) {
+    public function __construct(MediaFactory $mediaFactory)
+    {
         $this->mediaFactory = $mediaFactory;
         $basePath = ini_get('upload_tmp_dir');
         if (!$basePath) {
@@ -42,29 +43,24 @@ class MediaUploadTransformer implements DataTransformerInterface {
         $this->uploadFilesystem = new Filesystem(new Local($basePath));
     }
 
-    public function reverseTransform($value) {
-        $media = $value[MediaType::UPLOAD_FIELD_NAME] ?? $value;
+    public function reverseTransform($value)
+    {
+        $media = $value[MediaType::UPLOAD_FIELD_NAME] ?? null;
         if ($media instanceof UploadedFile) {
             $file = new File($this->uploadFilesystem, $media->getFilename());
             return $this->mediaFactory->createMediaByFile($file);
+        } elseif($media instanceof Media) {
+            return $media;
         }
-        return $value;
+        return null;
     }
 
-    public function transform($value) {
+    public function transform($value)
+    {
         if ($value instanceof Media) {
             return [MediaType::UPLOAD_FIELD_NAME => $value];
         }
         return $value;
-    }
-
-    public function getMediaFormFieldName() {
-        return $this->mediaFormFieldName;
-    }
-
-    public function setMediaFormFieldName($mediaFormFieldName) {
-        $this->mediaFormFieldName = $mediaFormFieldName;
-        return $this;
     }
 
 }

@@ -30,7 +30,7 @@ class MimeGuesser {
      */
     public function guess(string $input) {
         if (false !== \strpos($input, '/')) {
-            $mime = new Mime($input, $this->mimeTypes->getExtensions($annotatedMime)[0]);
+            $mime = new Mime($input, $this->mimeTypes->getExtensions($input)[0]);
         } else {
             $mime = new Mime($this->mimeTypes->getMimeTypes($input)[0], $input);
         }

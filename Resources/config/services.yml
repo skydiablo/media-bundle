@@ -25,6 +25,8 @@ services:
         
     #============ Controller ===============
     SkyDiablo\MediaBundle\Controller\ImageController:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         arguments:
             - "@skydiablo_media.imagine"
             - "@skydiablo_media.service_media_router.skydiablo_controller_media_router"

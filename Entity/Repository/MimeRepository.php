@@ -5,7 +5,7 @@ namespace SkyDiablo\MediaBundle\Entity\Repository;
 use Doctrine\DBAL\Types\Type;
 use SkyDiablo\DoctrineBundle\ORM\Repository\BaseRepository;
 use SkyDiablo\MediaBundle\Entity\Mime;
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @author SkyDiablo <skydiablo@gmx.net>

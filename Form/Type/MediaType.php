@@ -14,6 +14,7 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -21,22 +22,33 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @author Volker von Hoesslin <volker.hoesslin@swsn.de>
  */
-class MediaType extends AbstractType {
+class MediaType extends AbstractType
+{
 
     const UPLOAD_FIELD_NAME = 'media';
 
-    public function __construct(MediaUploadTransformer $mediaUploadTransformer) {
+    protected MediaUploadTransformer $mediaUploadTransformer;
+
+    public function __construct(MediaUploadTransformer $mediaUploadTransformer)
+    {
         $this->mediaUploadTransformer = $mediaUploadTransformer;
     }
 
-    public function configureOptions(OptionsResolver $resolver) {
+    public function configureOptions(OptionsResolver $resolver)
+    {
         $resolver->setDefault('data_class', null);
     }
 
-    public function buildForm(FormBuilderInterface $builder, array $options) {
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
         $builder->addModelTransformer($this->mediaUploadTransformer);
         $builder->add(self::UPLOAD_FIELD_NAME, FileType::class, [
             'data_class' => null,
+            'setter' => function (&$media, $value, $form) {
+                if ($value instanceof UploadedFile) {
+                    $media = [MediaType::UPLOAD_FIELD_NAME => $value];
+                }
+            },
         ]);
 
         // TODO: find a propper way to show/hide unlink checkbox...
@@ -57,11 +69,13 @@ class MediaType extends AbstractType {
         }
     }
 
-    public function buildView(FormView $view, FormInterface $form, array $options) {
+    public function buildView(FormView $view, FormInterface $form, array $options)
+    {
         $view->vars['media'] = null;
     }
 
-    public function getParent(): string {
+    public function getParent(): string
+    {
         return FormType::class;
     }
 
