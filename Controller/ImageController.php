@@ -16,7 +16,8 @@ use Symfony\Component\Routing\Annotation\Route;
  * @author Volker von Hoesslin <volker.hoesslin@swsn.de>
  * Class ImageController
  */
-class ImageController extends BaseController {
+class ImageController extends BaseController
+{
 
     const ROUTE_NAME_IMAGE_THUMBNAIL = 'skydiablo_media_bundle_get_image_thumbnail';
 
@@ -34,7 +35,8 @@ class ImageController extends BaseController {
      * @param ImagineInterface $imagine
      * @param ControllerMediaRouter $mediaRouter
      */
-    function __construct(ImagineInterface $imagine, ControllerMediaRouter $mediaRouter) {
+    function __construct(ImagineInterface $imagine, ControllerMediaRouter $mediaRouter)
+    {
         $this->imagine = $imagine;
         $this->mediaRouter = $mediaRouter;
     }
@@ -60,22 +62,23 @@ class ImageController extends BaseController {
      * )
      * @ParamConverter("media", options={"id" = "mediaId"})
      */
-    public function getImageThumbnailAction(Image $media, string $hash, $maxX, $maxY, $format) {
+    public function getImageThumbnailAction(Image $media, string $hash, $maxX, $maxY, $format)
+    {
         //TODO: add event for permission handling ?!
 
         $mimeGuesser = new \SkyDiablo\MediaBundle\Service\MimeGuesser();
         $validRequest = $this->mediaRouter->validateMediaParams($media, new Dimension($maxX, $maxY), $mimeGuesser->guess($format), $hash);
-        
-        if(!$validRequest) {
+
+        if (!$validRequest) {
             //TODO: irgendwas besseres als diesen basic stugff hier!
             throw new \Exception('Invalid Request!');
         }
-        
+
         /** @var ImagineInterface $imagine */
         $image = $this->imagine->read($media->getFile()->readStream())->thumbnail(new Box($maxX, $maxY));
-        return StreamedResponse::create(function () use ($image, $format) {
-                    $image->show($format);
-                });
+        return new StreamedResponse(function () use ($image, $format) {
+            $image->show($format);
+        });
     }
 
 }
