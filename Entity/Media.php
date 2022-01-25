@@ -71,6 +71,13 @@ abstract class Media extends ActiveEntity implements CreatedAtInterface {
         $this->mime = $mime;
     }
 
+    public function __clone()
+    {
+        parent::__clone();
+        $this->createdAt = null;
+    }
+
+
     /**
      * @return File
      */

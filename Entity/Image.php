@@ -34,6 +34,13 @@ class Image extends Media
         $this->dimension = $dimension;
     }
 
+    public function __clone()
+    {
+        parent::__clone();
+        $this->dimension = clone $this->dimension;
+    }
+
+
     /**
      * @return Dimension
      */
