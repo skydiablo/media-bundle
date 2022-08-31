@@ -11,7 +11,7 @@
         }
     ],
     "require": {
-        "php": "^7.2",
+        "php": "^8.0|^7.2",
         "skydiablo/doctrine-bundle": "dev-master",
         "league/flysystem": "^1.0",
         "league/flysystem-memory": "^1.0",

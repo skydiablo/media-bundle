@@ -3,8 +3,6 @@
 
 namespace SkyDiablo\MediaBundle\Service\MediaRouter;
 
-use SkyDiablo\CoreBundle\Service\Logger\LoggableInterface;
-use SkyDiablo\CoreBundle\Service\Logger\LoggableTrait;
 use SkyDiablo\MediaBundle\Entity\Embeddables\Dimension;
 use SkyDiablo\MediaBundle\Entity\Media;
 use SkyDiablo\MediaBundle\Entity\Mime;
@@ -13,10 +11,8 @@ use SkyDiablo\MediaBundle\Entity\Mime;
  * @author SkyDiablo <skydiablo@gmx.net>
  * Class ChainMediaRouter
  */
-class ChainMediaRouter implements MediaRouterInterface, LoggableInterface
+class ChainMediaRouter implements MediaRouterInterface
 {
-
-    use LoggableTrait;
 
     /**
      * @var MediaRouterInterface[]
@@ -54,13 +50,14 @@ class ChainMediaRouter implements MediaRouterInterface, LoggableInterface
      * @param Dimension $dimension
      * @param Mime $mime
      * @return string
+     * @throws \Exception
      */
     protected function handleMediaRouter($mediaRouter, Media $media, Dimension $dimension, Mime $mime)
     {
         try {
             return $mediaRouter->generateRoute($media, $dimension, $mime);
         } catch (\Exception $e) {
-            $this->logWarning('Primary MediaRouter can not generate an valid URL', [$e, $media, $dimension, $mime]);
+            throw new \Exception('Primary MediaRouter can not generate an valid URL for media-id "%d"', $media->getId(), $e->getCode(), $e);
         }
     }
 
