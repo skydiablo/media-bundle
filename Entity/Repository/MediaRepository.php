@@ -2,7 +2,7 @@
 
 namespace SkyDiablo\MediaBundle\Entity\Repository;
 
-use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use SkyDiablo\DoctrineBundle\ORM\Repository\BaseRepository;
 use SkyDiablo\MediaBundle\Entity\Media;
 use Doctrine\Persistence\ManagerRegistry;
@@ -12,9 +12,11 @@ use Doctrine\Persistence\ManagerRegistry;
  * Class MediaRepository
  * @method Media[] getAll($amount = null, $offset = null, $order = null, $orderField = 'id')
  */
-class MediaRepository extends BaseRepository {
+class MediaRepository extends BaseRepository
+{
 
-    public function __construct(ManagerRegistry $registry) {
+    public function __construct(ManagerRegistry $registry)
+    {
         parent::__construct($registry, Media::class);
     }
 
@@ -23,14 +25,15 @@ class MediaRepository extends BaseRepository {
      * @return Media|null
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function byFilenme($filename) {
+    public function byFilenme($filename)
+    {
         $qb = $this->createQueryBuilder();
         return $qb
-                        ->where(
-                                $qb->expr()->eq($this->entityField('filename'), ':filename')
-                        )
-                        ->setParameter('filename', $filename, Type::STRING)
-                        ->getQuery()->getOneOrNullResult();
+            ->where(
+                $qb->expr()->eq($this->entityField('filename'), ':filename')
+            )
+            ->setParameter('filename', $filename, Types::STRING)
+            ->getQuery()->getOneOrNullResult();
     }
 
 }
